@@ -1,0 +1,2 @@
+# Schema v2
+Adds stress_runs: immutable write-plan snapshot (requests, interval, concurrency, timeout, sample multiplier, DDL trigger, whitelisted index columns), JSON result, same queued/running/completed/failed lifecycle as experiments. Write stress tests run only against the ephemeral telemetry_stress table, rebuilt per round from the telemetry sample and dropped before the conclusion is assembled; telemetry itself is never modified. Runs serialize under MySQL GET_LOCK 'stress_run_serial' and share the single worker with index trials (queues index-trials and stress-runs).

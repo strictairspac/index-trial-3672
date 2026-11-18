@@ -29,3 +29,19 @@ class CandidateInput(BaseModel):
 class ExperimentInput(BaseModel):
  name:str=Field(min_length=2,max_length=120)
  candidate_id:int
+class StressInput(BaseModel):
+ name:str=Field(min_length=2,max_length=120)
+ requests:int=Field(default=600,ge=100,le=2000)
+ interval_ms:int=Field(default=20,ge=5,le=1000)
+ concurrency:int=Field(default=8,ge=1,le=32)
+ timeout_ms:int=Field(default=500,ge=50,le=10000)
+ sample_multiplier:int=Field(default=40,ge=1,le=100)
+ ddl_at_ms:int=Field(default=3000,ge=0)
+ columns:list[str]=Field(min_length=1,max_length=4)
+ @model_validator(mode='after')
+ def plan_valid(self):
+  if len(set(self.columns))!=len(self.columns) or any(x not in COLUMNS for x in self.columns):raise ValueError('索引列必须唯一且来自白名单')
+  span=self.requests*self.interval_ms
+  if span>120000:raise ValueError('写入计划总时长不能超过 120 秒')
+  if self.ddl_at_ms>=span:raise ValueError('建索引触发时间必须落在写入计划内')
+  return self
